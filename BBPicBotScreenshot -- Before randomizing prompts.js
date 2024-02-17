@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer'); //defines puppeteer
 
-//In this version, 
+//In this version, you can log into the site and upload one single photo.  Perfect for if you are doing a promotion and want to push a flyer.
 async function run() {
     const browser = await puppeteer.launch({headless: false}); // Launches the browser
     const page = await browser.newPage(); // Creates a new page
@@ -25,7 +25,7 @@ async function run() {
 		await page.goto('https://bentbox.co/stream'); //goes to 'stream' page
 
     //THESE ARE THE PROMPTS
-   await page.type('#post_text', 'I cannot wait to watch you quiver and shake as you spit cum in my pretty mouth 💦', {delay: 80}); //types in the textbox
+   await page.type('#post_text', 'I cannot wait to watch you quiver and shake as you spit cum in my pretty mouth 💦', {delay: 80}); //types a single prompt in the textbox
 
     /*
     This is how you type random prompts into the text box
