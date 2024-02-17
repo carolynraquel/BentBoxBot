@@ -1,26 +1,11 @@
-const puppeteer = require('puppeteer'); //defines puppeteer
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
 
-  let executionCount = 0;
-  const maxExecutions = 5;
-  const intervalHours = 2;
-  //const startHour = 9;
+//In this version, you have a selection of random prompts and can upload a random pic from a folder you specify
 
-  // Function to check if it's the desired time
-  const isTargetTime = () => {
-    const now = new Date();
-    const currentHour = now.getHours();
-
-    return currentHour >= startHour && (currentHour - startHour) % intervalHours === 0;
-  };
-
-  // Run code every minute and check if it's the desired time
-  const intervalId = setInterval(async () => {
-    if (isTargetTime()) {
-
-//In this version, 
+const puppeteer = require('puppeteer'); //initliaze Puppeteer.  my dumb ass typed this in late AF
+const fs = require('fs'); //this initializes the Node.js File System, which lets you to choose files from any folder
+const path = require('path'); //initializes filepath
+const executeCode = () => {
+console.log(  
 async function run() {
     const browser = await puppeteer.launch({headless: false}); // Launches the browser
     const page = await browser.newPage(); // Creates a new page
@@ -71,70 +56,63 @@ async function run() {
       const randomPrompt = prompts[randomIndex];
       await page.type('#post_text', randomPrompt, {delay: 70}); //types prompts in the textbox with a delay
   
+      //EMPUJA LOS BUTONES
+      await page.click('#sensitiveContentCheck'); //checks sensitive content check toggle
+      await page.click('#expires24HoursCheck');  //checks expire toggle
+      await page.click('.col-lg-6 i'); //triggers photo file selector.
 
-    await page.click('#sensitiveContentCheck'); //checks sensitive content check toggle
-    await page.click('#expires24HoursCheck');  //checks expire toggle
-    await page.click('.col-lg-6 i'); //triggers photo file selector.
-
-    //THIS IS WHERE YOU UPLOAD A FILE
-    async function uploadRandomFile() {
-    const filePath = (require('path')).resolve('F:/Cute-Selfies/DanceStudio.jpg'); //get the absolute path of the file to upload
-    await page.waitForSelector('input[type="file"]');
-    const fileInput = await page.$('input[type="file"]');
-    await fileInput.uploadFile(filePath);
-    await page.waitForTimeout(5000); // 2000 seconds // Wait for file to be uploaded (add additional wait time if required)
-    await page.click ('button.btn-primary'); //clicks 'post' button
-    }
+    //THIS IS WHERE YOU UPLOAD A RANDOM FILE
+      const folderPath = 'F:/Cute-Selfies/'; //navigate to the specified folder
+      const files = fs.readdirSync(folderPath); //get a list of all files within the folder
+      const randomFile = path.join(folderPath, files[Math.floor(Math.random() * files.length)]); // Set the file input value to the path of the random file
+      const fileInput = await page.$('input[type="file"]'); //Select file input element
+      await fileInput.uploadFile(randomFile); //set the file input to the path of the randomly selected file
+      await page.waitForTimeout(5000); // 2000 seconds // Wait for file to be uploaded (add additional wait time if required)
+      await page.click ('button.btn-primary'); //clicks 'post' button
     // Press cancel to close Explorer.  Pressing "x" will kill the upload.  
-    //CLOSE THE BROWSER
-    //await browser.close(); //closes browser //comment in if you want the browser to close
-
-
+    //When this random file feature ran for the first time, I felt like an evil genius BWAHAHAHAHAHAHAHAHAHA
+    
+    //THIS IS HOW YOU CLOSE THE BROWSER
+      await new Promise(resolve => setTimeout (resolve, 30000)); // delay browser closing
+      await browser.close(); // Close the browser
+ 
 } //end run function.  This program officially completed at 0211hrs on 1/16/2024
-executionCount++;
 
-if (executionCount >= maxExecutions) {
-  clearInterval(intervalId); // Stop the interval after reaching the desired executions
-  await browser.close(); // Close the browser after executing the code the specified number of times
-}
-}
-}, 60000); // Check every minute
-})();
+); //end console.log
+run(); //Function Call: This line tells the program to run. It must be outside of the async function, or Chromium will not load.
+}; //end executeCode
 
-// Close the browser
-await browser.close();
+const runCodeMultipleTimes = (executionCount, maxExecutions, intervalHours, startHour) => { //set parameters.  time is in 2400 format
+  const executeAndSchedule = () =>
+  {
+      executeCode();
 
-run(); // Call the run function.  This line tells the program to run.  this line needs to be outside of the async function, or Chromium will not load.
+      executionCount++;
+      if (executionCount >= maxExecutions) {
 
-/*
-function uploadRandomFile() {
-  // Specify the folder path containing the files
-  const folderPath = '/path/to/folder';
+        clearInterval(intervalId); //Stop the interval after a certain number of times
+      }
+  };
 
-  // Get all files within the folder
-  const files = fs.readdirSync(folderPath);
+  const scheduleNextExecution = () => {
+    const now = new Date();
+    const currentHour = now.getHours();
 
-  // Pick a random file
-  const randomFile = files[Math.floor(Math.random() * files.length)];
+          if (currentHour >= startHour) {
+              const timeToNextExecution = (intervalHours - (currentHour - startHour) % intervalHours) * 60 * 60 * 1000;
+      setTimeout(() => {
+        executeAndSchedule();
+      }, timeToNextExecution);
+    }
+  };
 
-  // Open the browser and create a new page
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+  // Initial execution
+  executeAndSchedule();
 
-  // Navigate to the page containing the file input
-  await page.goto('https://example.com/your-page');
+  // Schedule subsequent executions
+  const intervalId = setInterval(scheduleNextExecution, intervalHours * 60 * 60 * 1000);
+};
 
-  // Set the file input value to the path of the random file
-  const filePath = path.join(folderPath, randomFile);
-  const input = await page.$('input[type="file"]');
-  await input.uploadFile(filePath);
 
-  // Submit the form (if needed)
-  await page.click('input[type="submit"]');
 
-  // Wait for the upload process to complete (or any other task)
-  await page.waitForNavigation();
-
-  // Close the browser
-  await browser.close();
-*/
+runCodeMultipleTimes(0, 5, 2, currentHour); //Function call: Run 5 times a day every 2 hours starting at 2 am
